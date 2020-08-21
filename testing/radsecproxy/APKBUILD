@@ -1,0 +1,51 @@
+# Maintainer: Josef Vybíhal <jvybihal@uniscomp.cz>
+pkgname=radsecproxy
+pkgver=1.8.2
+pkgrel=4
+pkgdesc="radsecproxy is a generic RADIUS proxy that supports both UDP and TLS (RadSec) RADIUS transports."
+url="https://github.com/radsecproxy/radsecproxy"
+arch="x86_64"
+license="GPL"
+depends="nettle openssl"
+depends_dev="nettle-dev openssl-dev"
+makedepends="$depends_dev autoconf automake"
+
+subpackages="$pkgname-doc"
+#install=""
+source="https://github.com/radsecproxy/radsecproxy/releases/download/$pkgver/radsecproxy-$pkgver.tar.gz
+	$pkgname.initd
+	$pkgname.confd"
+
+prepare() {
+	default_prepare
+	autoreconf -fi
+}
+
+build() {
+
+	./configure --prefix=/usr \
+		--bindir=/usr/bin \
+		--sbindir=/usr/bin \
+		--sysconfdir=/etc/radsecproxy
+	make
+
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -D -m0644 radsecproxy.conf-example "$pkgdir"/etc/radsecproxy/radsecproxy.conf
+
+	install -m755 -D "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+	install -m644 -D "$srcdir"/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
+
+}
+
+
+sha512sums="a755f67d22c225fc236bb2b28d6681fdb4e615ea971477ed1d7669049b0da8590697b2ec150a6cc0e9d20426260c42712984b9b940649c87a87dcd8f0d90d7d3  radsecproxy-1.8.2.tar.gz
+f3e3a5c439b0eb6c44d27c89de63703b772794c3170b3e9bfd4cfd015797713d5e3f99bd8622c5bf0d1d176044ee894fc30adc47de2b6d72efacd0525821a7c0  radsecproxy.initd
+1e7a88423b894cb37116eb1daf4414fe0f6d0ec295297286e6c3d921475252005de7179bf2525fd7dac9d7adf8f4903d8ab2da89474251ffa69833a6e76bfe38  radsecproxy.confd"

@@ -1,0 +1,43 @@
+#!/sbin/openrc-run
+
+description="generic RADIUS proxy"
+description_checkconfig="Check configuration"
+description_reload="Reload configuration"
+description_reopen="Reopen log files"
+
+: ${cfgfile:=${RADSECPROXY_CONFIG:-/etc/radsecproxy/radsecproxy.conf}}
+
+#cfgfile=${cfgfile:-/etc/radsecproxy/radsecproxy.conf}
+
+command="/usr/bin/radsecproxy"
+command_args="-c $cfgfile"
+
+required_files="$cfgfile"
+
+depend() {
+	need net
+	use dns logger netmount
+}
+
+start_pre() {
+	$command $command_args -p
+}
+
+checkconfig() {
+	ebegin "Checking $name configuration"
+
+	start_pre
+	eend $?
+}
+
+reload() {
+	ebegin "Reloading $name configuration"
+	start_pre && start-stop-daemon --signal HUP --pidfile $pidfile
+	eend $?
+}
+
+reopen() {
+	ebegin "Reopening $name log files"
+	start-stop-daemon --signal USR1 --pidfile $pidfile
+	eend $?
+}
